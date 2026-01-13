@@ -1,0 +1,10 @@
+# Environment variables
+.env
+
+# Go build
+/bin/
+/vendor/
+
+# OS / Editor
+.DS_Store
+*.exe
