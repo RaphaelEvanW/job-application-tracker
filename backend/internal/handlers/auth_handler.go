@@ -57,15 +57,13 @@ type LoginRequest struct {
 func Login(c *gin.Context) {
 	var req LoginRequest
 
-	// Binding & Validating
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid email or password",
+			"error": err.Error(),
 		})
 		return
 	}
 
-	// Find User By Email
 	var user models.User
 	if err := database.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -74,14 +72,13 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Compare Password
 	if err := utils.CheckPassword(user.Password, req.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Wrong password, please check again",
+			"error": "wrong password",
 		})
+		return
 	}
 
-	// Generate JWT
 	token, err := utils.GenerateJWT(user.ID, user.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
