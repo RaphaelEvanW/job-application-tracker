@@ -48,3 +48,49 @@ func Register(c *gin.Context) {
 		"message": "User registered successfully",
 	})
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+func Login(c *gin.Context) {
+	var req LoginRequest
+
+	// Binding & Validating
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid email or password",
+		})
+		return
+	}
+
+	// Find User By Email
+	var user models.User
+	if err := database.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid email or password",
+		})
+		return
+	}
+
+	// Compare Password
+	if err := utils.CheckPassword(user.Password, req.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Wrong password, please check again",
+		})
+	}
+
+	// Generate JWT
+	token, err := utils.GenerateJWT(user.ID, user.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to generate token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+}

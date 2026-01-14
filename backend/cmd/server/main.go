@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/RaphaelEvanW/job-application-tracker/backend/internal/database"
 	"github.com/RaphaelEvanW/job-application-tracker/backend/internal/routes"
@@ -11,7 +12,8 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	godotenv.Load(".env")
+	log.Println("JWT_SECRET =", os.Getenv("JWT_SECRET"))
 
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
@@ -21,6 +23,7 @@ func main() {
 
 	database.Connect()
 	routes.AuthRoutes(r)
+	routes.UserRoutes(r)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
